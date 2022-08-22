@@ -1,5 +1,4 @@
 import sys
-import warnings
 
 import torch
 import torch.nn as nn
@@ -14,35 +13,22 @@ from evaluate import evaluate
 from logger import Logger
 import model
 
-warnings.filterwarnings("ignore")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-
 def run(net, logger, hps):
-    # Create dataloaders
+    #incarc datele
     trainloader, valloader, testloader = my_get_dataloaders(bs=hps['bs'])
-    print(len(trainloader))
 
-
-    #print(trainloader[0])
-    #return 0
-
+    #setez functiile retelei
     net = net.to(device)
 
     learning_rate = float(hps['lr'])
     scaler = GradScaler()
 
-    # optimizer = torch.optim.Adadelta(net.parameters(), lr=learning_rate, weight_decay=0.0001)
-    # optimizer = torch.optim.Adagrad(net.parameters(), lr=learning_rate, weight_decay=0.0001)
-    # optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate, weight_decay=0.0001, amsgrad=True)
-    # optimizer = torch.optim.ASGD(net.parameters(), lr=learning_rate, weight_decay=0.0001)
     optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9, nesterov=True, weight_decay=0.0001)
 
     scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.75, patience=5, verbose=True)
-    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.5, last_epoch=-1, verbose=True)
-    # scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01, steps_per_epoch=len(trainloader), epochs=hps['n_epochs'])
-    # scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=1, eta_min=1e-6, last_epoch=-1, verbose=True)
-    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-6, last_epoch=-1, verbose=False)
+
     criterion = nn.CrossEntropyLoss()
 
     best_acc = 0.0
@@ -50,10 +36,12 @@ def run(net, logger, hps):
     print("Training", hps['name'], "on", device)
     for epoch in range(hps['start_epoch'], hps['n_epochs']):
 
+        #train
         acc_tr, loss_tr = train(net, trainloader, criterion, optimizer, scaler)
         logger.loss_train.append(loss_tr)
         logger.acc_train.append(acc_tr)
 
+        #evaluate
         acc_v, loss_v = evaluate(net, valloader, criterion)
         logger.loss_val.append(loss_v)
         logger.acc_val.append(acc_v)
@@ -64,9 +52,11 @@ def run(net, logger, hps):
         if acc_v > best_acc:
             best_acc = acc_v
 
+            #salvez cel mai bun model pana in acest moment
             save(net, logger, hps, epoch + 1)
             logger.save_plt(hps)
 
+        #salvez oricum la o anumita frecventa
         if (epoch + 1) % hps['save_freq'] == 0:
             save(net, logger, hps, epoch + 1)
             logger.save_plt(hps)
@@ -76,21 +66,16 @@ def run(net, logger, hps):
               'Val Accuracy: %2.4f %%' % acc_v,
               sep='\t\t')
 
-    # Calculate performance on test set
+    #calculez acuratetea pe setul de test
     acc_test, loss_test = evaluate(net, testloader, criterion)
     print('Test Accuracy: %2.4f %%' % acc_test,
           'Test Loss: %2.6f' % loss_test,
           sep='\t\t')
 
-def main():
+
+if __name__ == '__main__':
     hps = setup_hparams(sys.argv[1:])
     logger = Logger()
     net = model.Vgg()
 
     run(net, logger, hps)
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    main()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/

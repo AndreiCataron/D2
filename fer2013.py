@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import torch
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
@@ -8,13 +7,6 @@ from PIL import Image
 from sklearn.model_selection import train_test_split
 
 from Dataset import Dataset
-
-
-def load_data(path='datasets/fer2013/fer2013.csv'):
-    fer2013 = pd.read_csv(path)
-    emotion_mapping = {0: 'Angry', 1: 'Disgust', 2: 'Fear', 3: 'Happy', 4: 'Sad', 5: 'Surprise', 6: 'Neutral'}
-
-    return fer2013, emotion_mapping
 
 
 def prepare_data(img_folder):
@@ -27,6 +19,7 @@ def prepare_data(img_folder):
             image_path = os.path.join(img_folder, dir1, file)
             image = Image.open(image_path)
             image = np.asarray(image)
+            image = np.reshape(image, (48, 48))
             img_data_array.append(image)
             class_name.append(emotion_mapping.get(dir1))
 
@@ -34,40 +27,44 @@ def prepare_data(img_folder):
 
 def my_get_dataloaders(path='FER2013dataset', bs = 64, augment = True):
     xtrain, ytrain = prepare_data(os.path.join(path, 'train'))
+    #######################
+    indexes = list(range(len(xtrain)))
+    np.random.shuffle(indexes)
+    indexes = indexes[:64*32]
+    xtrain = [xtrain[i] for i in indexes]
+    ytrain = [ytrain[i] for i in indexes]
+    ######################
     xtest, ytest = prepare_data(os.path.join(path, 'test'))
-    print(len(xtrain))
+    ######################
+    indexes = list(range(len(xtest)))
+    np.random.shuffle(indexes)
+    indexes = indexes[:64*8]
+    xtest = [xtest[i] for i in indexes]
+    ytest = [ytest[i] for i in indexes]
+    ######################
 
+    #impart datele de test in date de validare si date de test
     xtest, xval, ytest, yval = train_test_split(xtest, ytest, test_size=0.5, random_state = 30)
 
-    mu, st = 0, 255
-
-    test_transform = transforms.Compose([
-        # transforms.Scale(52),
-        transforms.TenCrop(40),
-        transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
-        transforms.Lambda(
-            lambda tensors: torch.stack([transforms.Normalize(mean=(mu,), std=(st,))(t) for t in tensors])),
-    ])
-
     if augment:
+        #definesc setul de transformari care se aplica fiecarei imagini atunci cand este apelata __getitem__ din Dataset
         train_transform = transforms.Compose([
-            transforms.RandomResizedCrop(48, scale=(0.8, 1.2)),
-            transforms.RandomApply([transforms.RandomAffine(0, translate=(0.2, 0.2))], p=0.5),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([transforms.RandomRotation(10)], p=0.5),
 
-            transforms.TenCrop(40),
-            transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
-            transforms.Lambda(
-                lambda tensors: torch.stack([transforms.Normalize(mean=(mu,), std=(st,))(t) for t in tensors])),
-            transforms.Lambda(lambda tensors: torch.stack([transforms.RandomErasing(p=0.5)(t) for t in tensors])),
+            #crop si resize in intervalul 0.8-1.2 la o portiune din imagine
+            transforms.RandomApply([transforms.RandomResizedCrop(48, scale=(0.8, 1.2))], p=0.7),
+            transforms.RandomHorizontalFlip(),
+
+            #translatarea si rotirea random a imaginii
+            transforms.RandomApply([transforms.RandomAffine(10, translate=(0.2, 0.2))], p=0.5),
+            transforms.ToTensor()
         ])
     else:
-        train_transform = test_transform
+        train_transform = None
 
     train = Dataset(xtrain, ytrain, train_transform)
-    val = Dataset(xval, yval, test_transform)
-    test = Dataset(xtest, ytest, test_transform)
+    #imaginile din seturile de validare si test nu vor fi augmentate
+    val = Dataset(xval, yval)
+    test = Dataset(xtest, ytest)
 
     trainloader = DataLoader(train, batch_size=bs, shuffle=True, num_workers=0)
     valloader = DataLoader(val, batch_size=bs, shuffle=True, num_workers=0)
@@ -75,55 +72,3 @@ def my_get_dataloaders(path='FER2013dataset', bs = 64, augment = True):
 
     return trainloader, valloader, testloader
 
-def get_dataloaders(path='datasets/fer2013/fer2013.csv', bs=64, augment=True):
-    """ Prepare train, val, & test dataloaders
-        Augment training data using:
-            - cropping
-            - shifting (vertical/horizental)
-            - horizental flipping
-            - rotation
-        input: path to fer2013 csv file
-        output: (Dataloader, Dataloader, Dataloader) """
-
-    fer2013, emotion_mapping = load_data(path)
-
-    xtrain, ytrain = prepare_data(fer2013[fer2013['Usage'] == 'Training'])
-    xval, yval = prepare_data(fer2013[fer2013['Usage'] == 'PrivateTest'])
-    xtest, ytest = prepare_data(fer2013[fer2013['Usage'] == 'PublicTest'])
-
-    mu, st = 0, 255
-
-    test_transform = transforms.Compose([
-        # transforms.Scale(52),
-        transforms.TenCrop(40),
-        transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
-        transforms.Lambda(lambda tensors: torch.stack([transforms.Normalize(mean=(mu,), std=(st,))(t) for t in tensors])),
-    ])
-
-    if augment:
-        train_transform = transforms.Compose([
-            transforms.RandomResizedCrop(48, scale=(0.8, 1.2)),
-            transforms.RandomApply([transforms.RandomAffine(0, translate=(0.2, 0.2))], p=0.5),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomApply([transforms.RandomRotation(10)], p=0.5),
-
-            transforms.TenCrop(40),
-            transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
-            transforms.Lambda(lambda tensors: torch.stack([transforms.Normalize(mean=(mu,), std=(st,))(t) for t in tensors])),
-            transforms.Lambda(lambda tensors: torch.stack([transforms.RandomErasing(p=0.5)(t) for t in tensors])),
-        ])
-    else:
-        train_transform = test_transform
-
-    # X = np.vstack((xtrain, xval))
-    # Y = np.hstack((ytrain, yval))
-
-    train = CustomDataset(xtrain, ytrain, train_transform)
-    val = CustomDataset(xval, yval, test_transform)
-    test = CustomDataset(xtest, ytest, test_transform)
-
-    trainloader = DataLoader(train, batch_size=bs, shuffle=True, num_workers=0)
-    valloader = DataLoader(val, batch_size=64, shuffle=True, num_workers=0)
-    testloader = DataLoader(test, batch_size=64, shuffle=True, num_workers=0)
-
-    return trainloader, valloader, testloader

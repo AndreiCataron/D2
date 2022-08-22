@@ -2,35 +2,26 @@ import torch
 
 from torch.cuda.amp import autocast
 
-DEVICE = torch.device("cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def train(net, dataloader, criterion, optimizer, scaler, Ncrop=True):
     net = net.train()
     loss_tr, correct_count, n_samples = 0.0, 0.0, 0.0
-    iters = len(dataloader)  # number of batches, not images
 
     for i, (inputs, labels) in enumerate(dataloader):
-        #inputs, labels = data
-        inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+        inputs, labels = inputs.to(device), labels.to(device)
 
         with autocast():
-            if Ncrop:
-                # fuse crops and batchsize
-                bs, ncrops, c, h, w = inputs.shape
-                inputs = inputs.view(-1, c, h, w)
-
-            # repeat labels ncrops times
-            labels = torch.repeat_interleave(labels, repeats=ncrops, dim=0)
 
             # forward + backward + optimize
             outputs = net(inputs)
+            print(outputs.shape)
             loss = criterion(outputs, labels)
             scaler.scale(loss).backward()
 
             scaler.step(optimizer)
             scaler.update()
             optimizer.zero_grad()
-            # scheduler.step(epoch + i / iters)
 
             # calculate performance metrics
             loss_tr += loss.item()
@@ -41,5 +32,7 @@ def train(net, dataloader, criterion, optimizer, scaler, Ncrop=True):
 
     acc = 100 * correct_count / n_samples
     loss = loss_tr / n_samples
+
+    print(acc, loss)
 
     return acc, loss

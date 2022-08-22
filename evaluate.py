@@ -1,29 +1,20 @@
 import warnings
 
 import torch
-from torch.cuda.amp import autocast
 
 warnings.filterwarnings("ignore")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def evaluate(net, dataloader, criterion, Ncrop=True):
+def evaluate(net, dataloader, criterion, Ncrop=False):
     net = net.eval()
     loss_tr, correct_count, n_samples = 0.0, 0.0, 0.0
-    #print(dataloader[0])
+
     for i, (inputs, labels) in enumerate(dataloader):
-        #inputs, labels = data
         inputs, labels = inputs.to(device), labels.to(device)
-        if Ncrop:
-            # fuse crops and batchsize
-            bs, ncrops, c, h, w = inputs.shape
-            inputs = inputs.view(-1, c, h, w)
-            # forward
-            outputs = net(inputs)
-            # combine results across the crops
-            outputs = outputs.view(bs, ncrops, -1)
-            outputs = torch.sum(outputs, dim=1) / ncrops
-        else:
-            outputs = net(inputs)
+
+        inputs = inputs.view(64, 1, 48, 48)
+        print(inputs.shape)
+        outputs = net(inputs.float())
 
         loss = criterion(outputs, labels)
 

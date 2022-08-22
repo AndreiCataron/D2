@@ -4,12 +4,10 @@ from PIL import Image
 
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, images, labels, transform=None, augment=False):
+    def __init__(self, images, labels, transform=None):
         self.images = images
         self.labels = labels
         self.transform = transform
-
-        self.augment = augment
 
     def __len__(self):
         return len(self.images)
@@ -18,14 +16,15 @@ class Dataset(torch.utils.data.Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        img = self.images[idx]
-
         img = np.array(self.images[idx])
 
-        img = Image.fromarray(img)
-
+        #augmentarea datelor
         if self.transform:
+            img = Image.fromarray(img)
             img = self.transform(img)
+        else:
+            img = torch.from_numpy(img)
+
 
         label = torch.tensor(self.labels[idx]).type(torch.long)
         sample = (img, label)
