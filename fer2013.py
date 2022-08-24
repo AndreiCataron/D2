@@ -20,8 +20,12 @@ def prepare_data(img_folder):
             image = Image.open(image_path)
             image = np.asarray(image)
             image = np.reshape(image, (48, 48))
+            #print(image_path)
+            #print(image)
             img_data_array.append(image)
             class_name.append(emotion_mapping.get(dir1))
+
+    #print(img_data_array[0])
 
     return img_data_array, class_name
 
@@ -29,16 +33,17 @@ def my_get_dataloaders(path='FER2013dataset', bs = 64, augment = True):
     xtrain, ytrain = prepare_data(os.path.join(path, 'train'))
     #######################
     indexes = list(range(len(xtrain)))
-    np.random.shuffle(indexes)
-    indexes = indexes[:64*32]
+    #np.random.shuffle(indexes)
+    indexes = indexes[:1]
     xtrain = [xtrain[i] for i in indexes]
     ytrain = [ytrain[i] for i in indexes]
+    #print(ytrain[:100])
     ######################
     xtest, ytest = prepare_data(os.path.join(path, 'test'))
     ######################
     indexes = list(range(len(xtest)))
-    np.random.shuffle(indexes)
-    indexes = indexes[:64*8]
+    #np.random.shuffle(indexes)
+    indexes = indexes[:64*4]
     xtest = [xtest[i] for i in indexes]
     ytest = [ytest[i] for i in indexes]
     ######################
@@ -56,15 +61,26 @@ def my_get_dataloaders(path='FER2013dataset', bs = 64, augment = True):
 
             #translatarea si rotirea random a imaginii
             transforms.RandomApply([transforms.RandomAffine(10, translate=(0.2, 0.2))], p=0.5),
-            transforms.ToTensor()
+
+            #transforms.ToTensor()
+
+            transforms.TenCrop(40),
+            transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
+            transforms.Lambda(lambda tensors: torch.stack([transforms.Normalize(mean=(0,), std=(255,))(t) for t in tensors])),
+            transforms.Lambda(lambda tensors: torch.stack([transforms.RandomErasing(p=0.5)(t) for t in tensors])),
+            transforms.Lambda(lambda tensors: torch.stack([transforms.Pad(4)(t) for t in tensors]))
         ])
     else:
         train_transform = None
 
+    test_transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
+
     train = Dataset(xtrain, ytrain, train_transform)
     #imaginile din seturile de validare si test nu vor fi augmentate
-    val = Dataset(xval, yval)
-    test = Dataset(xtest, ytest)
+    val = Dataset(xval, yval, test_transform)
+    test = Dataset(xtest, ytest, test_transform)
 
     trainloader = DataLoader(train, batch_size=bs, shuffle=True, num_workers=0)
     valloader = DataLoader(val, batch_size=bs, shuffle=True, num_workers=0)

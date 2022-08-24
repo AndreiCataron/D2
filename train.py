@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 from torch.cuda.amp import autocast
@@ -13,9 +14,18 @@ def train(net, dataloader, criterion, optimizer, scaler, Ncrop=True):
 
         with autocast():
 
+            bs, ncrops, c, h, w = inputs.shape
+            #np.savetxt('myfile.txt', inputs[0][0].numpy())
+            #return 0
+            inputs = inputs.view(-1, c, h, w)
+
+            # repeat labels ncrops times
+            labels = torch.repeat_interleave(labels, repeats=ncrops, dim=0)
+
             # forward + backward + optimize
+            #print(inputs.shape)
             outputs = net(inputs)
-            print(outputs.shape)
+            #print(outputs.shape)
             loss = criterion(outputs, labels)
             scaler.scale(loss).backward()
 

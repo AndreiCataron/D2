@@ -13,8 +13,9 @@ def evaluate(net, dataloader, criterion, Ncrop=False):
         inputs, labels = inputs.to(device), labels.to(device)
 
         inputs = inputs.view(64, 1, 48, 48)
-        print(inputs.shape)
+        #print(inputs.shape)
         outputs = net(inputs.float())
+        #print(outputs.shape)
 
         loss = criterion(outputs, labels)
 
