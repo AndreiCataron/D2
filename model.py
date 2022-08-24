@@ -38,6 +38,8 @@ class VggFeatures(nn.Module):
 
         self.drop = nn.Dropout(p=drop)
 
+        self.soft = nn.LogSoftmax(dim=1)
+
     def forward(self, x):
         x = F.relu(self.bn1a(self.conv1a(x)))
         x = F.relu(self.bn1b(self.conv1b(x)))
@@ -77,4 +79,5 @@ class Vgg(VggFeatures):
     def forward(self, x):
         x = super().forward(x)
         x = self.lin3(x)
+        x = self.soft(x)
         return x
