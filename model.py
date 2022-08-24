@@ -38,8 +38,6 @@ class VggFeatures(nn.Module):
 
         self.drop = nn.Dropout(p=drop)
 
-        self.soft = nn.LogSoftmax(dim=1)
-
     def forward(self, x):
         x = F.relu(self.bn1a(self.conv1a(x)))
         x = F.relu(self.bn1b(self.conv1b(x)))
@@ -48,15 +46,15 @@ class VggFeatures(nn.Module):
         #print(x.shape)
 
         x = F.relu(self.bn2a(self.conv2a(x)))
-        x = F.relu(self.bn2b(self.conv2b(x)))
+        #x = F.relu(self.bn2b(self.conv2b(x)))
         x = self.pool(x)
 
         x = F.relu(self.bn3a(self.conv3a(x)))
-        x = F.relu(self.bn3b(self.conv3b(x)))
+        #x = F.relu(self.bn3b(self.conv3b(x)))
         x = self.pool(x)
 
         x = F.relu(self.bn4a(self.conv4a(x)))
-        x = F.relu(self.bn4b(self.conv4b(x)))
+        #x = F.relu(self.bn4b(self.conv4b(x)))
         x = self.pool(x)
         # print(x.shape)
 
@@ -78,6 +76,5 @@ class Vgg(VggFeatures):
 
     def forward(self, x):
         x = super().forward(x)
-        x = self.lin3(x)
-        x = self.soft(x)
+        x = F.softmax(self.lin3(x))
         return x

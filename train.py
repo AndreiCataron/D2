@@ -12,6 +12,7 @@ def train(net, dataloader, criterion, optimizer, scaler, Ncrop=True):
     for i, (inputs, labels) in enumerate(dataloader):
         inputs, labels = inputs.to(device), labels.to(device)
 
+        optimizer.zero_grad()
         with autocast():
 
             bs, ncrops, c, h, w = inputs.shape
@@ -26,12 +27,12 @@ def train(net, dataloader, criterion, optimizer, scaler, Ncrop=True):
             #print(inputs.shape)
             outputs = net(inputs)
             #print(outputs.shape)
+
             loss = criterion(outputs, labels)
             scaler.scale(loss).backward()
 
             scaler.step(optimizer)
             scaler.update()
-            optimizer.zero_grad()
 
             # calculate performance metrics
             loss_tr += loss.item()

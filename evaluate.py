@@ -11,11 +11,13 @@ def evaluate(net, dataloader, criterion, Ncrop=False):
 
     for i, (inputs, labels) in enumerate(dataloader):
         inputs, labels = inputs.to(device), labels.to(device)
+        #print(inputs[0])
 
         inputs = inputs.view(64, 1, 48, 48)
         #print(inputs.shape)
         outputs = net(inputs.float())
-        #print(outputs.shape)
+
+
 
         loss = criterion(outputs, labels)
 

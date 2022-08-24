@@ -33,8 +33,8 @@ def my_get_dataloaders(path='FER2013dataset', bs = 64, augment = True):
     xtrain, ytrain = prepare_data(os.path.join(path, 'train'))
     #######################
     indexes = list(range(len(xtrain)))
-    #np.random.shuffle(indexes)
-    indexes = indexes[:1]
+    np.random.shuffle(indexes)
+    indexes = indexes[:64*16]
     xtrain = [xtrain[i] for i in indexes]
     ytrain = [ytrain[i] for i in indexes]
     #print(ytrain[:100])
@@ -42,7 +42,7 @@ def my_get_dataloaders(path='FER2013dataset', bs = 64, augment = True):
     xtest, ytest = prepare_data(os.path.join(path, 'test'))
     ######################
     indexes = list(range(len(xtest)))
-    #np.random.shuffle(indexes)
+    np.random.shuffle(indexes)
     indexes = indexes[:64*4]
     xtest = [xtest[i] for i in indexes]
     ytest = [ytest[i] for i in indexes]
