@@ -42,7 +42,7 @@ class VggFeatures(nn.Module):
     def forward(self, x):
         x = F.relu(self.bn1a(self.conv1a(x)))
         x = F.relu(self.bn1b(self.drop(self.conv1b(x))))
-        x = self.pool1(x)
+        x = self.pool2(x)
 
         #print(x.shape)
 
