@@ -19,7 +19,8 @@ class VggFeatures(nn.Module):
         self.conv4a = nn.Conv2d(256, 512, 3, padding=1)
         self.conv4b = nn.Conv2d(512, 512, 3, padding=1)
 
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.pool1 = nn.MaxPool2d(2, 1)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.bn1a = nn.BatchNorm2d(64)
         self.bn1b = nn.BatchNorm2d(64)
@@ -33,30 +34,30 @@ class VggFeatures(nn.Module):
         self.bn4a = nn.BatchNorm2d(512)
         self.bn4b = nn.BatchNorm2d(512)
 
-        self.lin1 = nn.Linear(512 * 3 * 3, 4096)
-        self.lin2 = nn.Linear(4096, 4096)
+        self.lin1 = nn.Linear(512 * 3 * 3, 8192)
+        self.lin2 = nn.Linear(8192, 4096)
 
         self.drop = nn.Dropout(p=drop)
 
     def forward(self, x):
         x = F.relu(self.bn1a(self.conv1a(x)))
-        x = F.relu(self.bn1b(self.conv1b(x)))
-        x = self.pool(x)
+        x = F.relu(self.bn1b(self.drop(self.conv1b(x))))
+        x = self.pool1(x)
 
         #print(x.shape)
 
         x = F.relu(self.bn2a(self.conv2a(x)))
-        #x = F.relu(self.bn2b(self.conv2b(x)))
-        x = self.pool(x)
+        x = F.relu(self.bn2b(self.drop(self.conv2b(x))))
+        x = self.pool2(x)
 
         x = F.relu(self.bn3a(self.conv3a(x)))
-        #x = F.relu(self.bn3b(self.conv3b(x)))
-        x = self.pool(x)
+        x = F.relu(self.bn3b(self.drop(self.conv3b(x))))
+        x = self.pool2(x)
 
         x = F.relu(self.bn4a(self.conv4a(x)))
-        #x = F.relu(self.bn4b(self.conv4b(x)))
-        x = self.pool(x)
-        # print(x.shape)
+        x = F.relu(self.bn4b(self.conv4b(x)))
+        x = self.pool2(x)
+        print(x.shape)
 
         #print(x.shape)
 
