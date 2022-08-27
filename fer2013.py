@@ -15,24 +15,26 @@ def prepare_data(img_folder):
     emotion_mapping = {'angry': 0, 'disgust': 1, 'fear': 2, 'happy': 3, 'sad': 4, 'surprise': 5, 'neutral':6}
 
     for dir1 in os.listdir(img_folder):
-      for file in os.listdir(os.path.join(img_folder, dir1)):
-        if not file.startswith('.'):
-          image_path = os.path.join(img_folder, dir1, file)
-          image = Image.open(image_path)
-          image = np.asarray(image)
-          img_data_array.append(image)
-          class_name.append(emotion_mapping.get(dir1))
+        for file in os.listdir(os.path.join(img_folder, dir1)):
+            image_path = os.path.join(img_folder, dir1, file)
+            image = Image.open(image_path)
+            image = np.asarray(image)
+            image = np.reshape(image, (48, 48))
+            #print(image_path)
+            #print(image)
+            img_data_array.append(image)
+            class_name.append(emotion_mapping.get(dir1))
 
     #print(img_data_array[0])
 
     return img_data_array, class_name
 
-def my_get_dataloaders(path='/content/drive/MyDrive/FER2013dataset', bs = 64, augment = True):
+def my_get_dataloaders(path='FER2013dataset', bs = 64, augment = True):
     xtrain, ytrain = prepare_data(os.path.join(path, 'train'))
     #######################
     indexes = list(range(len(xtrain)))
     np.random.shuffle(indexes)
-    indexes = indexes[:64*400]
+    indexes = indexes[:64*440]
     xtrain = [xtrain[i] for i in indexes]
     ytrain = [ytrain[i] for i in indexes]
     #print(ytrain[:100])
@@ -41,7 +43,7 @@ def my_get_dataloaders(path='/content/drive/MyDrive/FER2013dataset', bs = 64, au
     ######################
     indexes = list(range(len(xtest)))
     np.random.shuffle(indexes)
-    indexes = indexes[:64*100]
+    indexes = indexes[:64*110]
     xtest = [xtest[i] for i in indexes]
     ytest = [ytest[i] for i in indexes]
     ######################
@@ -73,7 +75,7 @@ def my_get_dataloaders(path='/content/drive/MyDrive/FER2013dataset', bs = 64, au
 
     test_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean=(0,), std=(255,))
+        transforms.Normalize(mean=(0, ), std=(255,))
     ])
 
     train = Dataset(xtrain, ytrain, train_transform)
