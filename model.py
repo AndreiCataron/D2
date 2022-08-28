@@ -12,6 +12,7 @@ class VggFeatures(nn.Module):
 
         self.conv2a = nn.Conv2d(64, 128, 3, padding=1)
         self.conv2b = nn.Conv2d(128, 128, 3, padding=1)
+        self.conv2c = nn.Conv2d(128, 128, 3, padding=1)
 
         self.conv3a = nn.Conv2d(128, 256, 3, padding=1)
         self.conv3b = nn.Conv2d(256, 256, 3, padding=1)
@@ -28,6 +29,7 @@ class VggFeatures(nn.Module):
 
         self.bn2a = nn.BatchNorm2d(128)
         self.bn2b = nn.BatchNorm2d(128)
+        self.bn2c = nn.BatchNorm2d(128)
 
         self.bn3a = nn.BatchNorm2d(256)
         self.bn3b = nn.BatchNorm2d(256)
@@ -54,6 +56,7 @@ class VggFeatures(nn.Module):
 
         x = F.relu(self.bn2a(self.conv2a(x)))
         x = F.relu(self.bn2b(self.conv2b(x)))
+        x = F.relu(self.bn2c(self.conv2c(x)))
         x = self.pool(x)
 
         #print(x.shape)
