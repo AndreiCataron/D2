@@ -5,7 +5,7 @@ from torch.cuda.amp import autocast
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def train(net, dataloader, criterion, optimizer, scaler, Ncrop=True):
+def train(net, dataloader, criterion, optimizer, scaler):
     net = net.train()
     loss_tr, correct_count, n_samples = 0.0, 0.0, 0.0
 

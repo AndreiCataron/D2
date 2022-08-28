@@ -9,7 +9,7 @@ hps = {
     'start_epoch': 0,
     'lr': 0.01,  # starting learning rate
     'save_freq': 20,  # how often to create checkpoints
-    'drop': 0.1,
+    'drop': 0.4,
     'bs': 64,
 }
 

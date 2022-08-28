@@ -4,11 +4,11 @@ import torchvision
 
 
 class VggFeatures(nn.Module):
-    def __init__(self, drop=0.3):
+    def __init__(self, drop=0.4):
         super().__init__()
 
-        self.conv1a = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3)
-        self.conv1b = nn.Conv2d(64, out_channels=64, kernel_size=3)
+        self.conv1a = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, padding=1)
+        self.conv1b = nn.Conv2d(64, out_channels=64, kernel_size=3, padding=1)
 
         self.conv2a = nn.Conv2d(64, 128, 3, padding=1)
         self.conv2b = nn.Conv2d(128, 128, 3, padding=1)
@@ -40,7 +40,7 @@ class VggFeatures(nn.Module):
         self.bnfc1 = nn.BatchNorm1d(4096)
         self.bnfc2 = nn.BatchNorm1d(4096)
 
-        self.lin1 = nn.Linear(512 * 2 * 2, 4096)
+        self.lin1 = nn.Linear(512 * 3 * 3, 4096)
         self.lin2 = nn.Linear(4096, 4096)
 
         self.drop = nn.Dropout(p=drop)
@@ -73,7 +73,7 @@ class VggFeatures(nn.Module):
 
         #print(x.shape)
 
-        x = x.view(-1, 512 * 2 * 2)
+        x = x.view(-1, 512 * 3 * 3)
         #print(x.shape)
 
         x = self.bnfc1(self.drop(F.relu(self.lin1(x))))
@@ -83,7 +83,7 @@ class VggFeatures(nn.Module):
 
 
 class Vgg(VggFeatures):
-    def __init__(self, drop=0.2):
+    def __init__(self, drop=0.4):
         super().__init__(drop)
         self.lin3 = nn.Linear(4096, 7)
 
