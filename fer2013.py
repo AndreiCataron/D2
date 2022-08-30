@@ -65,7 +65,7 @@ def my_get_dataloaders(path='/content/drive/MyDrive/FER2013dataset', bs = 64, au
             transforms.TenCrop(40),
             transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
             transforms.Lambda(lambda tensors: torch.stack([transforms.Normalize(mean=(0,), std=(255,))(t) for t in tensors])),
-            transforms.Lambda(lambda tensors: torch.stack([transforms.RandomErasing(p=0.5)(t) for t in tensors])),
+            transforms.Lambda(lambda tensors: torch.stack([transforms.RandomErasing(p=0.25)(t) for t in tensors])),
             transforms.Lambda(lambda tensors: torch.stack([transforms.Pad(4)(t) for t in tensors]))
         ])
     else:
@@ -73,7 +73,7 @@ def my_get_dataloaders(path='/content/drive/MyDrive/FER2013dataset', bs = 64, au
 
     test_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean=(0,), std=(255,))
+        transforms.Normalize(mean=(0, ), std=(255,))
     ])
 
     train = Dataset(xtrain, ytrain, train_transform)
@@ -86,3 +86,4 @@ def my_get_dataloaders(path='/content/drive/MyDrive/FER2013dataset', bs = 64, au
     testloader = DataLoader(test, batch_size=bs, shuffle=True, num_workers=0)
 
     return trainloader, valloader, testloader
+
