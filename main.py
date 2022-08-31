@@ -34,7 +34,9 @@ def run(net, logger, hps):
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=8, T_mult=1, eta_min=1e-6, last_epoch=-1, verbose=True)
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=8, eta_min=1e-6, last_epoch=-1, verbose=False)
 
-    criterion = nn.CrossEntropyLoss()
+    weights = [0.8608, 0.9848, 0.8572, 0.7486, 0.8317, 0.8895, 0.8270]
+
+    criterion = nn.CrossEntropyLoss(weight = weights)
 
     best_acc = 0.0
 
