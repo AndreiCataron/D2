@@ -36,6 +36,8 @@ def run(net, logger, hps):
 
     weights = torch.Tensor([0.8608, 0.9848, 0.8572, 0.7486, 0.8317, 0.8895, 0.8270])
 
+    weights = weights.to(device)
+
     criterion = nn.CrossEntropyLoss(weight = weights)
 
     best_acc = 0.0
