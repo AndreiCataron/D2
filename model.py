@@ -95,5 +95,6 @@ class Vgg(VggFeatures):
 
     def forward(self, x):
         x = super().forward(x)
-        x = F.softmax(self.lin3(x))
+        x = self.lin3(x)
+        #x = F.softmax(self.lin3(x))
         return x
