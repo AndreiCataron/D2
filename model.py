@@ -1,6 +1,5 @@
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
 
 
 class VggFeatures(nn.Module):
@@ -59,14 +58,14 @@ class VggFeatures(nn.Module):
 
         x = F.relu(self.bn2a(self.conv2a(x)))
         x = F.relu(self.bn2b(self.conv2b(x)))
-        x = F.relu(self.bn2c(self.conv2c(x)))
+        #x = F.relu(self.bn2c(self.conv2c(x)))
         x = self.pool(x)
 
         #print(x.shape)
 
         x = F.relu(self.bn3a(self.conv3a(x)))
         x = F.relu(self.bn3b(self.conv3b(x)))
-        x = F.relu(self.bn3c(self.conv3c(x)))
+        #x = F.relu(self.bn3c(self.conv3c(x)))
         x = self.pool(x)
 
         #print(x.shape)
